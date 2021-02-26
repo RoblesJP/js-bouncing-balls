@@ -7,7 +7,7 @@ function init() {
     canvas.width = 800;
     canvas.height = 400;
     ctx = canvas.getContext('2d');
-    for (i = 0; i < 1; i++) {
+    for (i = 0; i < 2; i++) {
         balls.push(
             new Ball(
                 Math.random() * canvas.width,   // positionX
@@ -22,9 +22,8 @@ function init() {
 }
 
 function animation() {
-    
     window.requestAnimationFrame(() => this.animation());
-    console.log(balls[0].movementAngle);
+    console.log(balls[0].distanceBetweenTwoBalls(balls[1]));
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     balls.forEach(e => {
         e.update();
@@ -39,11 +38,9 @@ class Ball {
         this.radius = radius;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
-        this.scalarVelocity = Math.sqrt(Math.pow(this.velocityX, 2) + Math.pow(this.velocityY, 2));
-        this.movementAngle = Math.acos(this.velocityX / this.scalarVelocity);
     }
 
-    produce = () => {
+    produce() {
         ctx.beginPath();
         ctx.fillStyle = 'red';
         ctx.arc(this.positionX, this.positionY, this.radius, 0, Math.PI * 2);
@@ -51,9 +48,26 @@ class Ball {
         ctx.restore();
     }
 
-    update = () => {
+    update() {
+        this.checkWallBounce();
+        
 
-        // cieling bounce
+        // position update
+        this.positionX += this.velocityX;
+        this.positionY += this.velocityY;
+    }
+
+    scalarVelocity() {
+        return Math.sqrt(Math.pow(this.velocityX, 2) + Math.pow(this.velocityY, 2));
+    }
+
+    movementAngle() {
+        var angle = Math.atan2(this.velocityY, this.velocityX);
+        var angle = angle < 0 ? angle + Math.PI * 2 : angle;
+        return angle;
+    }
+
+    checkWallBounce() {
         if (this.positionY - this.radius <= 0) {
             this.velocityY = -this.velocityY;
         }
@@ -72,12 +86,15 @@ class Ball {
         if (this.positionX + this.radius >= canvas.width) {
             this.velocityX = -this.velocityX;
         }
-
-        // position update
-        this.positionX += this.velocityX;
-        this.positionY += this.velocityY;
-        this.movementAngle = Math.acos(this.velocityX / this.scalarVelocity);
     }
+
+    distanceBetweenTwoBalls(otherBall) {
+        var distance = Math.sqrt(Math.pow(this.positionX - otherBall.positionX, 2) + Math.pow(this.positionY - otherBall.positionY, 2));
+        distance = distance - this.radius - otherBall.radius;
+        return distance;
+    }
+    
+
 }
 
 init();
