@@ -1,4 +1,5 @@
 var canvas, balls = [], ctx;
+var colors = ["#f2a154", "#bbdfc8", "#ad6c80", "#c1a1d3", "#939b62"]
 
 
 
@@ -7,51 +8,111 @@ function init() {
     canvas.width = 800;
     canvas.height = 400;
     ctx = canvas.getContext('2d');
-    for (i = 0; i < 2; i++) {
+
+    for (i = 0; i < 3; i++) {
+        let positionX = Math.random() * canvas.width;
+        let positionY = Math.random() * canvas.height;
+        let mass = 20;
+        let velocityX = Math.random()*10 / mass;
+        let velocityY = Math.random()*10 / mass;
+        let radius = mass*2;
+        let color = colors[Math.floor(Math.random() * colors.length)];
+
         balls.push(
             new Ball(
-                Math.random() * canvas.width,   // positionX
-                Math.random() * canvas.height,  // positionY
-                10,                             // radius
-                2,                              // velocityX
-                -2                               // velocityY
+                positionX,   
+                positionY,
+                radius,                             
+                velocityX,              
+                velocityY,              
+                mass,                                 
+                color
             )             
         )
-    };
-    window.requestAnimationFrame(animation);
+    }
+
+    for (i = 0; i < 20; i++) {
+        let positionX = Math.random() * canvas.width;
+        let positionY = Math.random() * canvas.height;
+        let mass = 1;
+        let velocityX = Math.random() * 5;
+        let velocityY = Math.random() * 5;
+        let radius = mass*5;
+        let color = colors[Math.floor(Math.random() * colors.length)];
+
+        balls.push(
+            new Ball(
+                positionX,   
+                positionY,
+                radius,                             
+                velocityX,              
+                velocityY,              
+                mass,                                 
+                color
+            )             
+        )
+    }
+
+    /*var vb1 = new Ball(100, 100, 10, 1, 1, 5, "red");
+    var vb2 = new Ball(200, 200, 10, -1, -1, 5, "blue");
+    balls.push(vb1);
+    balls.push(vb2);*/
+
+    
 }
 
 function animation() {
-    window.requestAnimationFrame(() => this.animation());
-    console.log(balls[0].distanceBetweenTwoBalls(balls[1]));
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     balls.forEach(e => {
-        e.update();
-        e.produce();
+        e.move(); 
     });
+
+    for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+            let b1 = balls[i];
+            let b2 = balls[j];
+            if (b1 != b2) {
+                let dist = Math.sqrt(Math.pow(b2.positionX - b1.positionX, 2) + Math.pow(b2.positionY - b1.positionY, 2));
+                if (dist < b1.radius + b2.radius) {
+                
+                    b1.ballCollision(b2);
+                }
+            }
+        }
+        
+    }      
+
+    balls.forEach(e => {
+        e.show(); 
+    });
+
+    window.requestAnimationFrame(animation);
 }
 
 class Ball {
-    constructor(positionX, positionY, radius, velocityX, velocityY) {
+    constructor(positionX, positionY, radius, velocityX, velocityY, mass, color) {
         this.positionX = positionX;
-        this.positionY= positionY;
+        this.positionY = positionY;
         this.radius = radius;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
+        this.mass = mass;
+        this.color = color;
     }
 
-    produce() {
+    show() {
         ctx.beginPath();
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = this.color;
         ctx.arc(this.positionX, this.positionY, this.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
 
-    update() {
-        this.checkWallBounce();
-        
-
+    move() {
+        this.wallCollision();
+                
         // position update
         this.positionX += this.velocityX;
         this.positionY += this.velocityY;
@@ -63,11 +124,11 @@ class Ball {
 
     movementAngle() {
         var angle = Math.atan2(this.velocityY, this.velocityX);
-        var angle = angle < 0 ? angle + Math.PI * 2 : angle;
+        //angle = angle < 0 ? angle + Math.PI * 2 : angle;
         return angle;
     }
 
-    checkWallBounce() {
+    wallCollision() {
         if (this.positionY - this.radius <= 0) {
             this.velocityY = -this.velocityY;
         }
@@ -88,13 +149,33 @@ class Ball {
         }
     }
 
-    distanceBetweenTwoBalls(otherBall) {
-        var distance = Math.sqrt(Math.pow(this.positionX - otherBall.positionX, 2) + Math.pow(this.positionY - otherBall.positionY, 2));
-        distance = distance - this.radius - otherBall.radius;
-        return distance;
-    }
-    
+    ballCollision(otherBall) {
+        this.positionX -= this.velocityX;
+        this.positionY -= this.velocityY;
+        otherBall.positionX -= otherBall.velocityX;
+        otherBall.positionY -= otherBall.velocityY;
+        let contactAngle = Math.atan2(otherBall.positionY - this.positionY, otherBall.positionX - this.positionX);
+        //contactAngle = contactAngle < 0 ? contactAngle + Math.PI*2 : contactAngle;
+        let v1 = this.scalarVelocity();
+        let v2 = otherBall.scalarVelocity();
+        let m1 = this.mass;
+        let m2 = otherBall.mass;
+        let theta1 = this.movementAngle();
+        let theta2 = otherBall.movementAngle();
 
+        let vx1F = (v1 * Math.cos(theta1 - contactAngle) * (m1 - m2) + 2 * m2 * v2 * Math.cos(theta2 - contactAngle)) / (m1 + m2) * Math.cos(contactAngle) + v1 * Math.sin(theta1 - contactAngle) * Math.cos(contactAngle + Math.PI / 2);
+        let vy1F = (v1 * Math.cos(theta1 - contactAngle) * (m1 - m2) + 2 * m2 * v2 * Math.cos(theta2 - contactAngle)) / (m1 + m2) * Math.sin(contactAngle) + v1 * Math.sin(theta1 - contactAngle) * Math.sin(contactAngle + Math.PI / 2);
+
+        let vx2F = (v2 * Math.cos(theta2 - contactAngle) * (m2 - m1) + 2 * m2 * v1 * Math.cos(theta1 - contactAngle)) / (m2 + m1) * Math.cos(contactAngle) + v2 * Math.sin(theta2 - contactAngle) * Math.cos(contactAngle + Math.PI / 2);
+        let vy2F = (v2 * Math.cos(theta2 - contactAngle) * (m2 - m1) + 2 * m2 * v1 * Math.cos(theta1 - contactAngle)) / (m2 + m1) * Math.sin(contactAngle) + v2 * Math.sin(theta2 - contactAngle) * Math.sin(contactAngle + Math.PI / 2);
+
+        this.velocityX = vx1F;
+        this.velocityY = vy1F;
+
+        otherBall.velocityX = vx2F;
+        otherBall.velocityY = vy2F;
+    }
 }
 
 init();
+window.requestAnimationFrame(animation);
