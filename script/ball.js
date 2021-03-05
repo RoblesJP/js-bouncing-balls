@@ -107,4 +107,21 @@ class Ball {
             return false;
         }
     }
+
+    changePosition() {
+        this.positionX = Math.random() * canvas.width;
+        this.positionY = Math.random() * canvas.height
+    }
+
+    isOut() {
+        if ((this.positionX - this.radius) < 0 || (this.positionX + this.radius) > canvas.width) {
+            return true;
+        }
+
+        if ((this.positionY - this.radius) < 0 || (this.positionY + this.radius) > canvas.height) {
+            return true;
+        }
+
+        return false;
+    }
 }

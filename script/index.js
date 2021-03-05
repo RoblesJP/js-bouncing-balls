@@ -54,6 +54,21 @@ function init() {
         )
     }
 
+    for (i = 0; i < balls.length; i++) {
+        for (j = 0; j < balls.length; j++) {
+            let b1 = balls[i];
+            let b2 = balls[j];
+            while (b1.isOverlapping(b2) && b1 != b2) {
+                
+                b1.changePosition();
+                j = 0;
+                console.log("Balls overlapping! Changing positions...")
+            }
+        }
+    }
+
+    
+
     /*var vb1 = new Ball(100, 100, 10, 1, 1, 5, "red");
     var vb2 = new Ball(200, 200, 10, -1, -1, 5, "blue");
     balls.push(vb1);
@@ -71,8 +86,6 @@ function animation(timestamp) {
         progress = timestamp - startTime;
     }
     
-    
-
     balls.forEach(e => {
         e.move(); 
     });
@@ -102,8 +115,6 @@ function animation(timestamp) {
         requestAnimationFrame(animation);
     }
 }
-
-
 
 init();
 window.requestAnimationFrame(animation);
