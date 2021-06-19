@@ -84,15 +84,6 @@ class Ball {
         
     }
 
-    hasBallCollide(otherBall) {
-        
-        if (this.distanceTo(otherBall) <= this.radius + otherBall.radius){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     distanceTo(otherBall) {
         let dx = otherBall.positionX - this.positionX;
         let dy = otherBall.positionY - this.positionY;
